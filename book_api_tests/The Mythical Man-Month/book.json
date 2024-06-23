@@ -1,0 +1,269 @@
+{
+  "author_alternative_name": [
+    "Frederick Phillips Brooks"
+  ],
+  "author_key": [
+    "OL587176A"
+  ],
+  "author_name": [
+    "Frederick P. Brooks"
+  ],
+  "cover_edition_key": "OL5044740M",
+  "cover_i": 6915361,
+  "ddc": [
+    "001.6425",
+    "005.1068"
+  ],
+  "ebook_access": "printdisabled",
+  "ebook_count_i": 3,
+  "edition_count": 6,
+  "edition_key": [
+    "OL21231757M",
+    "OL18440341M",
+    "OL1110870M",
+    "OL13956408M",
+    "OL21082760M",
+    "OL5044740M"
+  ],
+  "first_publish_year": 1975,
+  "format": [
+    "Paperback"
+  ],
+  "has_fulltext": true,
+  "ia": [
+    "mythicalmonth00broo",
+    "mythicalmanmonth00broo",
+    "mythicalmanmonth00broo_863"
+  ],
+  "ia_collection": [
+    "americana",
+    "americanuniversity-ol",
+    "belmont-ol",
+    "binghamton-ol",
+    "bostonuniversitylibraries-ol",
+    "dartmouthlibrary-ol",
+    "internetarchivebooks",
+    "johnshopkins-ol",
+    "openlibrary-d-ol",
+    "printdisabled",
+    "rochester-ol",
+    "schroederlibrary-ol",
+    "the-claremont-colleges-ol",
+    "udc-ol",
+    "unb-ol",
+    "uni-ol",
+    "universityofarizona-ol",
+    "universityofcoloradoboulder-ol",
+    "wilsoncollege-ol"
+  ],
+  "ia_collection_s": "americana;americanuniversity-ol;belmont-ol;binghamton-ol;bostonuniversitylibraries-ol;dartmouthlibrary-ol;internetarchivebooks;johnshopkins-ol;openlibrary-d-ol;printdisabled;rochester-ol;schroederlibrary-ol;the-claremont-colleges-ol;udc-ol;unb-ol;uni-ol;universityofarizona-ol;universityofcoloradoboulder-ol;wilsoncollege-ol",
+  "isbn": [
+    "9780201006506",
+    "0201835959",
+    "9780201835953",
+    "0201006502"
+  ],
+  "key": "/works/OL3510570W",
+  "language": [
+    "eng"
+  ],
+  "last_modified_i": 1703020920,
+  "lcc": [
+    "QA-0076.60000000.B75",
+    "QA-0076.75800000.B75 1995"
+  ],
+  "lccn": [
+    "94036653",
+    "74004714"
+  ],
+  "number_of_pages_median": 195,
+  "oclc": [
+    "8881771",
+    "1201368"
+  ],
+  "osp_count": 829,
+  "printdisabled_s": "OL1110870M;OL5044740M",
+  "public_scan_b": false,
+  "publish_date": [
+    "1982",
+    "1995",
+    "1975"
+  ],
+  "publish_place": [
+    "London",
+    "Reading, Mass",
+    "Reading,Mass"
+  ],
+  "publish_year": [
+    1995,
+    1982,
+    1975
+  ],
+  "publisher": [
+    "Addison-Wesley Professional",
+    "Addison-Wesley Pub. Co",
+    "Addison-Wesley",
+    "Addison-Wesley Pub. Co."
+  ],
+  "seed": [
+    "/books/OL21231757M",
+    "/books/OL18440341M",
+    "/books/OL1110870M",
+    "/books/OL13956408M",
+    "/books/OL21082760M",
+    "/books/OL5044740M",
+    "/works/OL3510570W",
+    "/authors/OL587176A",
+    "/subjects/computer_programming_management",
+    "/subjects/addresses_essays_lectures",
+    "/subjects/software_engineering",
+    "/subjects/electronic_digital_computers",
+    "/subjects/programming",
+    "/subjects/computer_programming",
+    "/subjects/multics",
+    "/subjects/technologie_logiciel",
+    "/subjects/gestion_projet",
+    "/subjects/programmation_(informatique)",
+    "/subjects/gestion",
+    "/subjects/système_exploitation_360",
+    "/subjects/ibm_360",
+    "/subjects/management",
+    "/subjects/computer_programming--management",
+    "/subjects/person:frederick_p._brooks",
+    "/subjects/person:david_parnas",
+    "/subjects/place:la_brea",
+    "/subjects/place:california",
+    "/subjects/time:1960s",
+    "/subjects/time:1970s"
+  ],
+  "subtitle": "Essays on Software Engineering",
+  "title": "The Mythical Man-Month",
+  "title_suggest": "The Mythical Man-Month",
+  "title_sort": "The Mythical Man-Month",
+  "type": "work",
+  "id_goodreads": [
+    "1904149",
+    "13629",
+    "1904149"
+  ],
+  "id_librarything": [
+    "646897",
+    "646897",
+    "646897"
+  ],
+  "subject": [
+    "Computer programming management",
+    "Addresses, essays, lectures",
+    "Software engineering",
+    "Electronic digital computers",
+    "Programming",
+    "Computer programming",
+    "MULTICS",
+    "Technologie logiciel",
+    "Gestion projet",
+    "Programmation (Informatique)",
+    "Gestion",
+    "Système exploitation 360",
+    "IBM 360",
+    "Management",
+    "Computer programming--management"
+  ],
+  "place": [
+    "La Brea",
+    "California"
+  ],
+  "time": [
+    "1960s",
+    "1970s"
+  ],
+  "person": [
+    "Frederick P. Brooks",
+    "David Parnas"
+  ],
+  "ia_box_id": [
+    "IA119806",
+    "IA1557306"
+  ],
+  "ratings_count_1": 0,
+  "ratings_count_2": 2,
+  "ratings_count_3": 5,
+  "ratings_count_4": 7,
+  "ratings_count_5": 14,
+  "ratings_average": 4.178571,
+  "ratings_sortable": 3.6807637,
+  "ratings_count": 28,
+  "readinglog_count": 221,
+  "want_to_read_count": 171,
+  "currently_reading_count": 10,
+  "already_read_count": 40,
+  "publisher_facet": [
+    "Addison-Wesley",
+    "Addison-Wesley Professional",
+    "Addison-Wesley Pub. Co",
+    "Addison-Wesley Pub. Co."
+  ],
+  "person_key": [
+    "david_parnas",
+    "frederick_p._brooks"
+  ],
+  "time_facet": [
+    "1960s",
+    "1970s"
+  ],
+  "place_key": [
+    "california",
+    "la_brea"
+  ],
+  "person_facet": [
+    "David Parnas",
+    "Frederick P. Brooks"
+  ],
+  "subject_facet": [
+    "Addresses, essays, lectures",
+    "Computer programming",
+    "Computer programming management",
+    "Computer programming--management",
+    "Electronic digital computers",
+    "Gestion",
+    "Gestion projet",
+    "IBM 360",
+    "MULTICS",
+    "Management",
+    "Programmation (Informatique)",
+    "Programming",
+    "Software engineering",
+    "Système exploitation 360",
+    "Technologie logiciel"
+  ],
+  "_version_": 1795910478633894000,
+  "place_facet": [
+    "California",
+    "La Brea"
+  ],
+  "lcc_sort": "QA-0076.75800000.B75 1995",
+  "author_facet": [
+    "OL587176A Frederick P. Brooks"
+  ],
+  "subject_key": [
+    "addresses_essays_lectures",
+    "computer_programming",
+    "computer_programming--management",
+    "computer_programming_management",
+    "electronic_digital_computers",
+    "gestion",
+    "gestion_projet",
+    "ibm_360",
+    "management",
+    "multics",
+    "programmation_(informatique)",
+    "programming",
+    "software_engineering",
+    "système_exploitation_360",
+    "technologie_logiciel"
+  ],
+  "ddc_sort": "001.6425",
+  "time_key": [
+    "1960s",
+    "1970s"
+  ]
+}
