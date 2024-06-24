@@ -1,77 +1,254 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Image from "next/image";
 import axios from 'axios';
+import { TextSegment } from '../lib/textProcessor';
+
+interface Scene {
+  shotNumber: number;
+  characters: string[];
+  description: string;
+  dialogue?: string;
+  tone: string;
+}
+
+interface Character {
+  name: string;
+  description: string;
+}
+
+type ProcessedSegment = TextSegment & {
+  audioUrl: string;
+  scenes: Scene[];
+  newCharacters: Character[];
+}
+
+// Helper function to write logs to the server
+const writeLog = async (bookName: string, logType: string, data: any) => {
+  try {
+    await axios.post('/api/log', { bookName, logType, data });
+    console.log(`Log written for ${bookName} - ${logType}`);
+  } catch (error) {
+    console.error('Error writing log:', error);
+  }
+};
 
 export default function Home() {
   const [bookTitle, setBookTitle] = useState('');
   const [bookText, setBookText] = useState('');
-  const [currentImage, setCurrentImage] = useState('');
+  const [segments, setSegments] = useState<TextSegment[]>([]);
+  const [processedSegments, setProcessedSegments] = useState<ProcessedSegment[]>([]);
+  const [currentSegmentIndex, setCurrentSegmentIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [currentScene, setCurrentScene] = useState<Scene | null>(null);
+  const [isBookProcessed, setIsBookProcessed] = useState(false);
+  const textAreaRef = useRef<HTMLDivElement>(null);
+  const audioRef = useRef<HTMLAudioElement>(null);
 
-  const fetchBookText = async () => {
+  const processNextSegment = async (segmentIndex: number) => {
+    if (segmentIndex >= segments.length) {
+      console.log('Segment index out of bounds');
+      console.log('Segment index:', segmentIndex);
+      console.log('Segments length:', segments.length);
+      console.log('Segments:', segments);
+      return;
+    }
+
+    const segment = segments[segmentIndex];
+    try {
+      console.log(`Processing segment ${segmentIndex}:`, segment);
+      const [audioResponse, sceneResponse] = await Promise.all([
+        axios.post('/api/generateAudio', { text: segment.text, segmentId: segment.id }),
+        axios.post('/api/getSceneBreakdown', { text: segment.text, bookTitle, segmentIndex })
+      ]);
+      console.log(`Audio response:`, audioResponse.data);
+      console.log(`Scene response:`, sceneResponse.data);
+
+      await writeLog(bookTitle, `processSegment_${segmentIndex}`, { 
+        segmentId: segment.id, 
+        audioResponse: audioResponse.data,
+        sceneResponse: sceneResponse.data
+      });
+
+      const processedSegment: ProcessedSegment = {
+        ...segment,
+        audioUrl: audioResponse.data.audioUrl,
+        scenes: sceneResponse.data.shots,
+        newCharacters: sceneResponse.data.newCharacters
+      };
+
+      setProcessedSegments(prev => [...prev, processedSegment]);
+
+      // If this is the first processed segment, set the current scene
+      if (segmentIndex === 0) {
+        setCurrentScene(processedSegment.scenes[0]);
+      }
+
+    } catch (error) {
+      console.error(`Error processing segment ${segmentIndex}:`, error);
+      await writeLog(bookTitle, `processSegment_error_${segmentIndex}`, { segmentId: segment.id, error: error.message });
+    }
+  };
+
+  const handleAudioEnd = async () => {
+    console.log('Audio ended, moving to next segment');
+    const nextIndex = currentSegmentIndex + 1;
+    
+    if (nextIndex < processedSegments.length) {
+      setCurrentSegmentIndex(nextIndex);
+      setCurrentScene(processedSegments[nextIndex].scenes[0]);
+      
+      // Process the next segment if it hasn't been processed yet
+      if (nextIndex + 2 >= processedSegments.length && nextIndex + 2 < segments.length) {
+        await processNextSegment(nextIndex + 2);
+      }
+    } else {
+      setIsPlaying(false);
+      console.log('Reached end of processed segments');
+    }
+  };
+
+  const playPauseAudio = () => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(error => {
+          console.error('Error playing audio:', error);
+        });
+      }
+      setIsPlaying(!isPlaying);
+    }
+  };
+
+  const fetchAndProcessBook = async () => {
     setIsLoading(true);
     setError('');
+    setProcessedSegments([]);
+    setCurrentSegmentIndex(0);
+    setIsBookProcessed(false);
     try {
+      console.log(`Fetching book: ${bookTitle}`);
       const response = await axios.get(`/api/fetchBook?bookTitle=${encodeURIComponent(bookTitle)}`);
-      setBookText(response.data.bookText);
-      // Reset the current image when a new book is loaded
-      setCurrentImage('');
+      const fetchedBookText = response.data.bookText;
+      await writeLog(bookTitle, 'fetchBook', { responseData: response.data });
+      
+      console.log('Processing book');
+      const processResponse = await axios.post('/api/processBook', { bookText: fetchedBookText });
+      await writeLog(bookTitle, 'processBook', { responseData: processResponse.data });
+      
+      const allSegments = processResponse.data.segments;
+      console.log('Set segments:', allSegments.slice(0, 100));
+      setSegments(allSegments);
+      setBookText(processResponse.data.processedText);
+      setIsBookProcessed(true);
+      
     } catch (error) {
-      setError(error.response?.data?.error || 'Error fetching book data');
+      console.error('Error in fetchAndProcessBook:', error);
+      setError(error.response?.data?.error || 'Error processing book');
+      await writeLog(bookTitle, 'fetchAndProcessBook_error', { error: error.message });
     } finally {
       setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    const processInitialSegments = async () => {
+      if (isBookProcessed && segments.length > 0) {
+        console.log('Processing first three segments');
+        console.log('Segments length:', segments.length);
+        for (let i = 0; i < 3 && i < segments.length; i++) {
+          await processNextSegment(i);
+        }
+      }
+    };
+
+    processInitialSegments();
+  }, [isBookProcessed]);
+
+  useEffect(() => {
+    if (audioRef.current && processedSegments[currentSegmentIndex]) {
+      audioRef.current.src = processedSegments[currentSegmentIndex].audioUrl;
+      audioRef.current.load(); // Add this line
+      if (isPlaying) {
+        audioRef.current.play().catch(error => {
+          console.error('Error playing audio:', error);
+        });
+      }
+    }
+  }, [processedSegments, currentSegmentIndex, isPlaying]);
+
+  useEffect(() => {
+    if (textAreaRef.current && segments[currentSegmentIndex]) {
+      const segmentStart = segments[currentSegmentIndex].startIndex;
+      const scrollPercentage = segmentStart / bookText.length;
+      textAreaRef.current.scrollTop = scrollPercentage * textAreaRef.current.scrollHeight;
+    }
+  }, [currentSegmentIndex, segments, bookText.length]);
+
   return (
-    <main className="flex flex-col min-h-screen p-4">
-      {/* Header with search */}
-      <div className="mb-4">
+    <main className="flex flex-col h-screen p-4">
+      <div className="mb-4 text-center">
         <h1 className="text-2xl font-bold mb-2">Visual Novel Creator</h1>
-        <div className="flex">
+        <div className="flex justify-center">
           <input
             type="text"
             placeholder="Enter book title"
             value={bookTitle}
             onChange={(e) => setBookTitle(e.target.value)}
-            className="flex-grow p-2 border rounded text-black bg-white"
+            className="p-2 border rounded text-black bg-white w-64"
           />
           <button 
-            onClick={fetchBookText}
+            onClick={fetchAndProcessBook}
             className="ml-2 p-2 bg-blue-500 text-white rounded"
             disabled={isLoading}
           >
-            {isLoading ? 'Fetching...' : 'Fetch Book'}
+            {isLoading ? 'Processing...' : 'Fetch Book'}
           </button>
         </div>
-        {error && <p className="text-red-500 mt-2">{error}</p>}
       </div>
 
-      {/* Main content area */}
-      <div className="flex flex-grow">
-        {/* Book text area - left third */}
-        <div className="w-1/3 pr-4">
-          <h2 className="text-xl font-semibold mb-2">Book Text</h2>
-          <div className="h-[calc(100vh-200px)] overflow-y-auto border rounded p-4">
+      {error && <p className="text-red-500 mt-2 text-center">{error}</p>}
+
+      <div className="flex flex-grow overflow-hidden">
+        <div className="w-1/3 pr-4 flex flex-col">
+          <div className="mb-2 flex justify-between items-center">
+            <h2 className="text-xl font-semibold">Book Text</h2>
+            <button
+              onClick={playPauseAudio}
+              className="p-2 bg-green-500 text-white rounded"
+              disabled={!bookText || processedSegments.length === 0}
+            >
+              {isPlaying ? 'Pause' : 'Play'}
+            </button>
+          </div>
+          <div 
+            ref={textAreaRef}
+            className="flex-grow overflow-y-auto border rounded p-4"
+          >
             <p className="whitespace-pre-wrap">{bookText}</p>
           </div>
         </div>
 
-        {/* Image display area - right two-thirds */}
-        <div className="w-2/3 pl-4">
-          <h2 className="text-xl font-semibold mb-2">Current Scene</h2>
-          <div className="h-[calc(100vh-200px)] border rounded p-4 flex items-center justify-center bg-gray-100">
-            {currentImage ? (
-              <Image src={currentImage} alt="Current scene" width={500} height={500} objectFit="contain" />
-            ) : (
-              <p className="text-gray-500">No image generated yet</p>
-            )}
+        <div className="w-2/3 pl-4 flex flex-col">
+          <h2 className="text-xl font-semibold mb-2">Scene Visualization</h2>
+          <div className="flex-grow border rounded p-4 flex flex-col items-center justify-center bg-white overflow-hidden">
+            {currentScene ? (
+              <>
+                <h3 className="text-lg font-semibold mb-2 text-black">Shot {currentScene.shotNumber}</h3>
+                <p className="mb-2 text-black"><strong>Characters:</strong> {currentScene.characters.join(', ')}</p>
+                <p className="mb-2 text-black"><strong>Description:</strong> {currentScene.description}</p>
+                <p className="mb-2 text-black"><strong>Dialogue:</strong> {currentScene.dialogue}</p>
+                <p className="mb-2 text-black"><strong>Tone:</strong> {currentScene.tone}</p>
+              </>
+            ) : null}
           </div>
         </div>
       </div>
+      <audio ref={audioRef} onEnded={handleAudioEnd} style={{display: 'none'}} />
     </main>
   );
 }

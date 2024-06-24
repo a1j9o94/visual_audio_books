@@ -1,0 +1,47 @@
+{
+  "segmentId": 1,
+  "audioResponse": {
+    "audioUrl": "/audio/segment_1.mp3"
+  },
+  "sceneResponse": {
+    "shots": [
+      {
+        "shotNumber": 1,
+        "characters": [
+          "Nick Carraway"
+        ],
+        "description": "Medium close-up shot of Nick Carraway, the camera positioned slightly low to capture his pensive expression. Soft, natural lighting casts shadows across his face, hinting at an inner conflict.",
+        "dialogue": null,
+        "tone": "Introspective, reflective"
+      },
+      {
+        "shotNumber": 2,
+        "characters": [
+          "Nick Carraway"
+        ],
+        "description": "Over-the-shoulder shot, framing Nick in the foreground, with a blurred, out-of-focus background suggesting his isolation. The camera lingers, allowing the audience to study his thoughtful demeanor.",
+        "dialogue": null,
+        "tone": "Contemplative, detached"
+      },
+      {
+        "shotNumber": 3,
+        "characters": [
+          "Nick Carraway"
+        ],
+        "description": "Close-up shot of Nick's eyes, the camera slowly pushing in to accentuate his introspective gaze. The lighting is subdued, casting a hint of melancholy over his features.",
+        "dialogue": null,
+        "tone": "Pensive, melancholic"
+      },
+      {
+        "shotNumber": 4,
+        "characters": [
+          "Nick Carraway"
+        ],
+        "description": "Wide shot, revealing Nick sitting alone in a dimly lit room. The camera slowly pans around him, emphasizing his solitude and the weight of his thoughts.",
+        "dialogue": "\"I'm inclined to reserve all judgements, a habit that has opened up many curious natures to me and also made me the victim of not a few veteran bores.\"",
+        "tone": "Philosophical, self-aware"
+      }
+    ],
+    "newCharacters": []
+  }
+}
