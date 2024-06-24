@@ -21,8 +21,13 @@ async function createSpeech(text: string, retryCount = 0): Promise<any> {
   }
 }
 
-export async function generateAudioForSegment(text: string, segmentId: number, outputDir: string): Promise<string> {
-  const speechFile = path.join(outputDir, `segment_${segmentId}.mp3`);
+export async function generateAudioForSegment(text: string, segmentId: number, bookTitle: string, outputDir: string): Promise<string> {
+  if (!outputDir) {
+    throw new Error('Output directory is not specified');
+  }
+
+  const filename = `${bookTitle}_segment_${segmentId}.mp3`;
+  const speechFile = path.join(outputDir, filename);
   
   try {
     const mp3 = await createSpeech(text);
@@ -30,9 +35,9 @@ export async function generateAudioForSegment(text: string, segmentId: number, o
     const buffer = Buffer.from(await mp3.arrayBuffer());
     await fs.promises.writeFile(speechFile, buffer);
 
-    return `/audio/segment_${segmentId}.mp3`;
+    return `/audio/${filename}`;
   } catch (error) {
-    console.error(`Error generating audio for segment ${segmentId}:`, error);
+    console.error(`Error generating audio for ${bookTitle} segment ${segmentId}:`, error);
     throw error;
   }
 }

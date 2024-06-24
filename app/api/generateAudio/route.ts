@@ -4,10 +4,10 @@ import { NextResponse } from 'next/server';
 import { generateAudioForSegment } from '../../../lib/audioGenerator';
 
 export async function POST(request: Request) {
-  const { text, segmentId } = await request.json();
+  const { text, segmentId, bookTitle } = await request.json();
 
   try {
-    const audioUrl = await generateAudioForSegment(text, segmentId, './public/audio');
+    const audioUrl = await generateAudioForSegment(text, segmentId, bookTitle, './public/audio');
     return NextResponse.json({ audioUrl });
   } catch (error) {
     console.error('Error generating audio:', error);
