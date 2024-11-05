@@ -12,15 +12,20 @@ export async function POST(request: Request) {
   }
 
   try {
-    const sanitizedBookName = bookName.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-    const logDir = path.join(process.cwd(), 'logs', sanitizedBookName);
+    const logDir = path.join(process.cwd(), 'logs');
     await fs.mkdir(logDir, { recursive: true });
 
-    const timestamp = new Date().toISOString().replace(/:/g, '-');
-    const fileName = `${logType}_${timestamp}.json`;
-    const filePath = path.join(logDir, fileName);
+    const filePath = path.join(logDir, 'log.txt');
 
-    await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+    const timestamp = new Date().toISOString();
+    const logEntry = {
+      timestamp,
+      bookName,
+      logType,
+      data
+    };
+
+    await fs.appendFile(filePath, JSON.stringify(logEntry, null, 2) + '\n');
 
     return NextResponse.json({ success: true, filePath });
   } catch (error) {

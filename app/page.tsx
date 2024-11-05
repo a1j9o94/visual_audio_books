@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import Image from "next/image";
 import axios from 'axios';
 import { TextSegment } from '../lib/textProcessor';
@@ -47,6 +47,7 @@ export default function Home() {
   const [currentScene, setCurrentScene] = useState<Scene | null>(null);
   const [isBookProcessed, setIsBookProcessed] = useState(false);
   const [currentImage, setCurrentImage] = useState<string | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const textAreaRef = useRef<HTMLDivElement>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -61,7 +62,7 @@ export default function Home() {
     }
   };
 
-  const processNextSegment = async (segmentIndex: number) => {
+  const processNextSegment = useCallback(async (segmentIndex: number) => {
     if (segmentIndex >= segments.length) {
       console.log('All segments processed');
       return;
@@ -109,42 +110,114 @@ export default function Home() {
         setCurrentImage(processedSegment.imageUrl);
       }
 
-    } catch (error) {
+    } catch (error: any) {
       console.error(`Error processing segment ${segmentIndex}:`, error);
       await writeLog(bookTitle, `processSegment_error_${segmentIndex}`, { segmentId: segment.id, error: error.message });
     }
-  };
+  }, [segments, bookTitle]);
 
-  const handleAudioEnd = async () => {
-    console.log('Audio ended, moving to next segment');
-    const nextIndex = currentSegmentIndex + 1;
+  useEffect(() => {
+    console.log('Current segment index:', currentSegmentIndex);
+    if (processedSegments[currentSegmentIndex]) {
+      console.log('Current segment audio URL:', processedSegments[currentSegmentIndex].audioUrl);
+    }
+  }, [currentSegmentIndex, processedSegments]);
+
+  useEffect(() => {
+    if (!audioRef.current || !processedSegments[currentSegmentIndex]) {
+      return;
+    }
+
+    const currentSegment = processedSegments[currentSegmentIndex];
+    const audioUrl = currentSegment.audioUrl;
     
+    console.log(`Setting audio source to: ${audioUrl}`);
+    audioRef.current.src = audioUrl;
+    audioRef.current.load();
+
+    const playAudio = async () => {
+      if (isPlaying && !isInitialLoad) {
+        try {
+          console.log(`Attempting to play audio: ${audioUrl}`);
+          await audioRef.current?.play();
+        } catch (error) {
+          console.error('Error playing audio:', error);
+        }
+      }
+    };
+
+    playAudio();
+  }, [currentSegmentIndex, processedSegments, isPlaying, isInitialLoad]);
+
+  const handleAudioEnd = useCallback(() => {
+    const currentUrl = audioRef.current?.src;
+    console.log(`Audio ended: ${currentUrl}`);
+    
+    const nextIndex = currentSegmentIndex + 1;
     if (nextIndex < processedSegments.length) {
+      console.log(`Moving to next segment: ${nextIndex}`);
       setCurrentSegmentIndex(nextIndex);
       setCurrentScene(processedSegments[nextIndex].scenes[0]);
       setCurrentImage(processedSegments[nextIndex].imageUrl);
       
+      // Preload next segments if needed
       if (nextIndex + 2 >= processedSegments.length && nextIndex + 2 < segments.length) {
-        await processNextSegment(nextIndex + 2);
+        processNextSegment(nextIndex + 2);
       }
     } else {
       setIsPlaying(false);
       console.log('Reached end of processed segments');
     }
-  };
+  }, [currentSegmentIndex, processNextSegment, processedSegments, segments.length]);
 
   const playPauseAudio = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play().catch(error => {
-          console.error('Error playing audio:', error);
-        });
-      }
-      setIsPlaying(!isPlaying);
+    if (!audioRef.current || !processedSegments[currentSegmentIndex]) {
+      return;
     }
+
+    if (isPlaying) {
+      console.log(`Pausing audio: ${audioRef.current.src}`);
+      audioRef.current.pause();
+    } else {
+      const currentSegment = processedSegments[currentSegmentIndex];
+      console.log(`Starting audio for segment ${currentSegmentIndex}: ${currentSegment.audioUrl}`);
+      audioRef.current.src = currentSegment.audioUrl;
+      audioRef.current.load();
+      audioRef.current.play().catch(error => {
+        console.error('Error playing audio:', error);
+      });
+    }
+    
+    setIsPlaying(!isPlaying);
+    setIsInitialLoad(false);
   };
+
+  useEffect(() => {
+    const processInitialSegments = async () => {
+      if (isBookProcessed && segments.length > 0) {
+        console.log('Processing first 5 segments');
+        console.log('Segments length:', segments.length);
+        for (let i = 0; i < 5 && i < segments.length; i++) {
+          await processNextSegment(i);
+        }
+      }
+    };
+    processInitialSegments();
+  }, [isBookProcessed, processNextSegment, segments.length]);
+
+  useEffect(() => {
+    if (textAreaRef.current && segments[currentSegmentIndex]) {
+      const segmentStart = segments[currentSegmentIndex].startIndex;
+      const scrollPercentage = segmentStart / bookText.length;
+      textAreaRef.current.scrollTop = scrollPercentage * textAreaRef.current.scrollHeight;
+    }
+  }, [currentSegmentIndex, segments, bookText.length]);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      console.log(`Audio src changed: ${audioRef.current.src}`);
+    }
+  }, [audioRef.current?.src]);
 
   const fetchAndProcessBook = async () => {
     setIsLoading(true);
@@ -165,7 +238,7 @@ export default function Home() {
       setSegments(allSegments);
       setBookText(processResponse.data.processedText);
       setIsBookProcessed(true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error in fetchAndProcessBook:', error);
       setError(error.response?.data?.error || 'Error processing book');
       await writeLog(bookTitle, 'fetchAndProcessBook_error', { error: error.message });
@@ -173,47 +246,7 @@ export default function Home() {
       setIsLoading(false);
     }
   };
-  useEffect(() => {
-    const processInitialSegments = async () => {
-      if (isBookProcessed && segments.length > 0) {
-        console.log('Processing first three segments');
-        console.log('Segments length:', segments.length);
-        for (let i = 0; i < 3 && i < segments.length; i++) {
-          await processNextSegment(i);
-        }
-      }
-    };
-    processInitialSegments();
-  }, [isBookProcessed]);
-  useEffect(() => {
-    const handleSegmentChange = async () => {
-      if (audioRef.current && processedSegments[currentSegmentIndex]) {
-        const currentSegment = processedSegments[currentSegmentIndex];
-        audioRef.current.src = currentSegment.audioUrl;
-        audioRef.current.load();
-        
-        setCurrentScene(currentSegment.scenes[0]);
-        setCurrentImage(currentSegment.imageUrl);
 
-        if (isPlaying) {
-          try {
-            await audioRef.current.play();
-          } catch (error) {
-            console.error('Error playing audio:', error);
-          }
-        }
-      }
-    };
-
-    handleSegmentChange();
-  }, [currentSegmentIndex, processedSegments, isPlaying]);
-  useEffect(() => {
-    if (textAreaRef.current && segments[currentSegmentIndex]) {
-      const segmentStart = segments[currentSegmentIndex].startIndex;
-      const scrollPercentage = segmentStart / bookText.length;
-      textAreaRef.current.scrollTop = scrollPercentage * textAreaRef.current.scrollHeight;
-    }
-  }, [currentSegmentIndex, segments, bookText.length]);
   return (
     <main className="flex flex-col h-screen p-4">
       <div className="mb-4 text-center">
@@ -266,14 +299,20 @@ export default function Home() {
                 <p className="mb-2 text-black"><strong>Dialogue:</strong> {currentScene.dialogue}</p>
                 <p className="mb-2 text-black"><strong>Tone:</strong> {currentScene.tone}</p>
                 {currentImage && (
-                  <img src={currentImage} alt="Generated scene" className="mt-4 max-w-full h-auto" />
+                  <Image 
+                    src={currentImage} 
+                    alt="Generated scene" 
+                    width={500}
+                    height={500}
+                    className="mt-4 max-w-full h-auto"
+                  />
                 )}
               </>
             ) : null}
           </div>
         </div>
       </div>
-      <audio ref={audioRef} onEnded={handleAudioEnd} style={{ display: 'none' }} />
+      <audio ref={audioRef} onEnded={handleAudioEnd} className="hidden" />
     </main>
   );
 }

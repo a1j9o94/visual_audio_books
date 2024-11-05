@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import axios from 'axios';
-import FormData from 'form-data';
 import { generateImagePrompt } from '../../../lib/imagePromptGenerator';
 import fs from "node:fs";
+import FormData from "form-data";
 
 export async function POST(request: Request) {
   const { scene, bookTitle, segmentId } = await request.json();
@@ -20,14 +20,14 @@ export async function POST(request: Request) {
     try {
       response = await axios.postForm(
         `https://api.stability.ai/v2beta/stable-image/generate/ultra`,
-        payload,
+        axios.toFormData(payload, new FormData()),
         {
           headers: {
-            'Content-Type': 'multipart/form-data',
-            'Accept': 'application/json',
+            'Accept': 'image/*',
             'Authorization': `Bearer ${process.env.STABILITY_API_KEY}`,
           },
           responseType: 'arraybuffer',
+          validateStatus: undefined,
         }
       );
 
